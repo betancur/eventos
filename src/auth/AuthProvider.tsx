@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, AuthState, LoginCredentials, RegisterCredentials } from './types';
 import { firebaseAuthApi, firebaseUserApi } from './firebaseAuth';
 
@@ -25,6 +26,8 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [state, setState] = useState<AuthState>({
     user: null,
     loading: true,
@@ -126,6 +129,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  const redirectBasedOnRole = useCallback((user: User) => {
+    // Get the intended destination from location state, or use role-based default
+    const from = location.state?.from?.pathname;
+    
+    if (from && from !== '/login') {
+      // If user was trying to access a specific page, redirect there
+      navigate(from, { replace: true });
+    } else {
+      // Otherwise, redirect based on role
+      switch (user.role) {
+        case 'admin':
+          navigate('/admin', { replace: true });
+          break;
+        case 'organizer':
+          navigate('/organizer', { replace: true });
+          break;
+        case 'attendee':
+        default:
+          navigate('/events', { replace: true });
+          break;
+      }
+    }
+  }, [navigate, location.state]);
+
   const login = async (credentials: LoginCredentials) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
@@ -146,6 +173,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { success: false, error: errorMessage };
     }
   };
+
+  // Handle user login success and redirection
+  useEffect(() => {
+    if (state.user && !state.loading && location.pathname === '/login') {
+      redirectBasedOnRole(state.user);
+    }
+  }, [state.user, state.loading, location.pathname, redirectBasedOnRole]);
 
   const register = async (credentials: RegisterCredentials) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -186,6 +220,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         loading: false,
         error: null
       });
+
+      // Redirect to login page after logout
+      navigate('/login', { replace: true });
     } catch (error: any) {
       setState(prev => ({ ...prev, loading: false, error: error.message }));
     }

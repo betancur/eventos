@@ -1,91 +1,63 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, useLocation, Link } from 'react-router-dom';
+import { EventProvider, useEvent } from './EventContext';
 
-// Temporary mock data - will be replaced with Supabase data
-const mockEventDetails = {
-  1: {
-    id: 1,
-    title: 'Tech Conference 2025',
-    description: 'Annual technology conference featuring the latest innovations and industry leaders.',
-    longDescription: 'Join us for a comprehensive technology conference that brings together industry experts, innovators, and enthusiasts. This year\'s event features keynote speakers from major tech companies, hands-on workshops, and networking opportunities.',
-    date: '2025-08-15',
-    time: '09:00 AM - 06:00 PM',
-    location: 'Convention Center',
-    address: '123 Tech Street, Innovation City',
-    image: null,
-    isPublic: true,
-    organizer: 'Tech Events Inc.',
-    capacity: 500,
-    price: 'Free',
-    tags: ['Technology', 'Innovation', 'Networking']
-  },
-  2: {
-    id: 2,
-    title: 'Design Workshop',
-    description: 'Interactive workshop on modern design principles and user experience.',
-    longDescription: 'Dive deep into the world of modern design with this hands-on workshop. Learn about user experience principles, design thinking, and practical tools used by industry professionals.',
-    date: '2025-08-20',
-    time: '10:00 AM - 04:00 PM',
-    location: 'Creative Studio',
-    address: '456 Design Avenue, Art District',
-    image: null,
-    isPublic: true,
-    organizer: 'Design Collective',
-    capacity: 50,
-    price: '$75',
-    tags: ['Design', 'UX', 'Workshop']
-  }
-};
+// Sub-components for different sections
+import EventInfo from './components/EventInfo';
+import EventActivities from './components/EventActivities';
+import EventGallery from './components/EventGallery';
+import EventMap from './components/EventMap';
 
-const mockSchedule = [
-  { time: '09:00 AM', title: 'Registration & Coffee', speaker: '', description: 'Welcome and networking' },
-  { time: '10:00 AM', title: 'Opening Keynote', speaker: 'Dr. Jane Smith', description: 'The Future of Technology' },
-  { time: '11:00 AM', title: 'Panel Discussion', speaker: 'Industry Leaders', description: 'AI and Machine Learning Trends' },
-  { time: '12:00 PM', title: 'Lunch Break', speaker: '', description: 'Networking lunch' },
-  { time: '01:30 PM', title: 'Workshop Session 1', speaker: 'Various', description: 'Hands-on technical workshops' },
-  { time: '03:00 PM', title: 'Coffee Break', speaker: '', description: '' },
-  { time: '03:30 PM', title: 'Workshop Session 2', speaker: 'Various', description: 'Advanced topics' },
-  { time: '05:00 PM', title: 'Closing Remarks', speaker: 'Event Organizers', description: 'Wrap-up and next steps' }
-];
+const EventDetailsContent: React.FC = () => {
+  const { eventId } = useParams<{ eventId: string }>();
+  const location = useLocation();
+  const { currentEvent, loadEvent, loadActivities, loading, error } = useEvent();
+  const [activeTab, setActiveTab] = useState('info');
 
-const mockSpeakers = [
-  {
-    id: 1,
-    name: 'Dr. Jane Smith',
-    title: 'Chief Technology Officer',
-    company: 'TechCorp',
-    bio: 'Dr. Smith is a renowned expert in artificial intelligence with over 15 years of experience in the tech industry.',
-    image: null,
-    social: {
-      twitter: '@janesmith',
-      linkedin: 'jane-smith-tech'
+  useEffect(() => {
+    if (eventId) {
+      loadEvent(eventId);
+      loadActivities(eventId);
     }
-  },
-  {
-    id: 2,
-    name: 'Alex Johnson',
-    title: 'Senior Product Designer',
-    company: 'DesignStudio',
-    bio: 'Alex specializes in user experience design and has worked with startups and Fortune 500 companies.',
-    image: null,
-    social: {
-      twitter: '@alexdesigns',
-      linkedin: 'alex-johnson-design'
+  }, [eventId]);
+
+  // Determine active tab from URL
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/gallery')) {
+      setActiveTab('gallery');
+    } else if (path.includes('/map')) {
+      setActiveTab('map');
+    } else if (path.includes('/activities')) {
+      setActiveTab('activities');
+    } else {
+      setActiveTab('info');
     }
-  }
-];
+  }, [location.pathname]);
 
-const EventDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const eventId = id ? parseInt(id) : 1;
-  const event = mockEventDetails[eventId as keyof typeof mockEventDetails];
-
-  if (!event) {
+  if (loading) {
     return (
-      <div className="text-center">
-        <h1>Event Not Found</h1>
-        <p>The event you're looking for doesn't exist.</p>
-        <Link to="/events" className="btn btn-primary">Back to Events</Link>
+      <div className="container text-center" style={{ paddingTop: '40px' }}>
+        <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+        <p style={{ marginTop: '16px' }}>Loading event...</p>
+      </div>
+    );
+  }
+
+  if (error || !currentEvent) {
+    return (
+      <div className="container text-center" style={{ paddingTop: '40px' }}>
+        <div className="card" style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <div className="card-body">
+            <h1 style={{ color: '#dc3545', marginBottom: '16px' }}>Event Not Found</h1>
+            <p className="card-text">
+              {error || 'The event you\'re looking for could not be found.'}
+            </p>
+            <Link to="/events" className="btn btn-primary mt-16">
+              Back to Events
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -93,184 +65,130 @@ const EventDetails: React.FC = () => {
   return (
     <div className="event-details">
       {/* Event Header */}
-      <div className="card mb-24">
-        {event.image && (
-          <img 
-            src={event.image} 
-            alt={event.title}
-            style={{ width: '100%', height: '300px', objectFit: 'cover' }}
-          />
-        )}
-        <div className="card-body">
-          <h1 className="card-title">{event.title}</h1>
-          <p className="card-text mb-16">{event.description}</p>
+      <div className="event-header" style={{ 
+        marginBottom: '24px', 
+        paddingBottom: '16px', 
+        borderBottom: '1px solid #e9ecef' 
+      }}>
+        <div style={{ marginBottom: '8px' }}>
+          <Link 
+            to="/events" 
+            style={{ 
+              color: '#0d6efd', 
+              textDecoration: 'none', 
+              fontSize: '14px' 
+            }}
+          >
+            ← Back to Events
+          </Link>
+        </div>
+        
+        <h1 style={{ marginBottom: '8px', lineHeight: '1.2' }}>
+          {currentEvent.title}
+        </h1>
+        
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: '16px', 
+          color: '#6c757d', 
+          fontSize: '14px' 
+        }}>
+          <span>📅 {new Date(currentEvent.startDate).toLocaleDateString()}</span>
+          <span>📍 {currentEvent.venue.name}</span>
+          <span>👥 {currentEvent.stats.totalAttendees} attendees</span>
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="event-tabs" style={{ marginBottom: '24px' }}>
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid #e9ecef',
+          overflowX: 'auto'
+        }}>
+          <Link
+            to={`/events/${eventId}`}
+            className={`tab-link ${activeTab === 'info' ? 'active' : ''}`}
+            style={{
+              padding: '12px 16px',
+              textDecoration: 'none',
+              color: activeTab === 'info' ? '#0d6efd' : '#6c757d',
+              borderBottom: activeTab === 'info' ? '2px solid #0d6efd' : 'none',
+              whiteSpace: 'nowrap',
+              fontWeight: activeTab === 'info' ? '500' : 'normal'
+            }}
+          >
+            ℹ️ Info
+          </Link>
           
-          <div className="row mb-16">
-            <div className="col-12 col-md-6">
-              <strong>📅 Date:</strong> {new Date(event.date).toLocaleDateString()}
-            </div>
-            <div className="col-12 col-md-6">
-              <strong>🕐 Time:</strong> {event.time}
-            </div>
-          </div>
+          <Link
+            to={`/events/${eventId}/activities`}
+            className={`tab-link ${activeTab === 'activities' ? 'active' : ''}`}
+            style={{
+              padding: '12px 16px',
+              textDecoration: 'none',
+              color: activeTab === 'activities' ? '#0d6efd' : '#6c757d',
+              borderBottom: activeTab === 'activities' ? '2px solid #0d6efd' : 'none',
+              whiteSpace: 'nowrap',
+              fontWeight: activeTab === 'activities' ? '500' : 'normal'
+            }}
+          >
+            🗓️ Schedule ({currentEvent.stats.totalActivities})
+          </Link>
           
-          <div className="row mb-16">
-            <div className="col-12 col-md-6">
-              <strong>📍 Location:</strong> {event.location}
-            </div>
-            <div className="col-12 col-md-6">
-              <strong>💰 Price:</strong> {event.price}
-            </div>
-          </div>
-          
-          <div className="mb-16">
-            <strong>📧 Organizer:</strong> {event.organizer}
-          </div>
-          
-          <div className="mb-16">
-            <strong>👥 Capacity:</strong> {event.capacity} attendees
-          </div>
-          
-          {event.tags && (
-            <div className="mb-16">
-              <strong>🏷️ Tags:</strong> {event.tags.join(', ')}
-            </div>
+          {currentEvent.settings.allowPhotoUpload && (
+            <Link
+              to={`/events/${eventId}/gallery`}
+              className={`tab-link ${activeTab === 'gallery' ? 'active' : ''}`}
+              style={{
+                padding: '12px 16px',
+                textDecoration: 'none',
+                color: activeTab === 'gallery' ? '#0d6efd' : '#6c757d',
+                borderBottom: activeTab === 'gallery' ? '2px solid #0d6efd' : 'none',
+                whiteSpace: 'nowrap',
+                fontWeight: activeTab === 'gallery' ? '500' : 'normal'
+              }}
+            >
+              🖼️ Photos ({currentEvent.stats.totalPhotos})
+            </Link>
           )}
           
-          <div className="row">
-            <div className="col-12 col-md-6">
-              <button className="btn btn-primary btn-block mb-16">
-                Register for Event
-              </button>
-            </div>
-            <div className="col-12 col-md-6">
-              <button className="btn btn-outline btn-block mb-16">
-                Add to Calendar
-              </button>
-            </div>
-          </div>
+          {currentEvent.mapId && (
+            <Link
+              to={`/events/${eventId}/map`}
+              className={`tab-link ${activeTab === 'map' ? 'active' : ''}`}
+              style={{
+                padding: '12px 16px',
+                textDecoration: 'none',
+                color: activeTab === 'map' ? '#0d6efd' : '#6c757d',
+                borderBottom: activeTab === 'map' ? '2px solid #0d6efd' : 'none',
+                whiteSpace: 'nowrap',
+                fontWeight: activeTab === 'map' ? '500' : 'normal'
+              }}
+            >
+              🗺️ Venue Map
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Event Description */}
-      <div className="card mb-24">
-        <div className="card-header">
-          <h2>About This Event</h2>
-        </div>
-        <div className="card-body">
-          <p>{event.longDescription}</p>
-          <p><strong>Address:</strong> {event.address}</p>
-        </div>
-      </div>
-
-      {/* Schedule */}
-      <div className="card mb-24">
-        <div className="card-header">
-          <h2>Event Schedule</h2>
-        </div>
-        <div className="card-body">
-          {mockSchedule.map((item, index) => (
-            <div key={index} className="schedule-item" style={{ borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '16px' }}>
-              <div className="row">
-                <div className="col-12 col-md-3">
-                  <strong>{item.time}</strong>
-                </div>
-                <div className="col-12 col-md-9">
-                  <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
-                    {item.title}
-                  </h4>
-                  {item.speaker && (
-                    <p style={{ fontSize: '14px', color: '#6c757d', marginBottom: '4px' }}>
-                      Speaker: {item.speaker}
-                    </p>
-                  )}
-                  {item.description && (
-                    <p style={{ fontSize: '14px', marginBottom: '0' }}>
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Speakers */}
-      <div className="card mb-24">
-        <div className="card-header">
-          <h2>Featured Speakers</h2>
-        </div>
-        <div className="card-body">
-          <div className="row">
-            {mockSpeakers.map((speaker) => (
-              <div key={speaker.id} className="col-12 col-md-6 col-lg-4 mb-16">
-                <div className="speaker-card" style={{ textAlign: 'center', padding: '16px' }}>
-                  {speaker.image ? (
-                    <img 
-                      src={speaker.image} 
-                      alt={speaker.name}
-                      style={{ 
-                        width: '80px', 
-                        height: '80px', 
-                        borderRadius: '50%', 
-                        objectFit: 'cover',
-                        marginBottom: '8px'
-                      }}
-                    />
-                  ) : (
-                    <div style={{ 
-                      width: '80px', 
-                      height: '80px', 
-                      borderRadius: '50%', 
-                      backgroundColor: '#e9ecef',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 8px',
-                      fontSize: '24px'
-                    }}>
-                      👤
-                    </div>
-                  )}
-                  <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>
-                    {speaker.name}
-                  </h4>
-                  <p style={{ fontSize: '14px', color: '#6c757d', marginBottom: '4px' }}>
-                    {speaker.title}
-                  </p>
-                  <p style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>
-                    {speaker.company}
-                  </p>
-                  <p style={{ fontSize: '12px', marginBottom: '8px' }}>
-                    {speaker.bio}
-                  </p>
-                  <div style={{ fontSize: '12px' }}>
-                    {speaker.social.twitter && (
-                      <span style={{ marginRight: '8px' }}>
-                        🐦 {speaker.social.twitter}
-                      </span>
-                    )}
-                    {speaker.social.linkedin && (
-                      <span>
-                        💼 {speaker.social.linkedin}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="text-center">
-        <Link to="/events" className="btn btn-secondary">
-          ← Back to Events
-        </Link>
+      {/* Content Area */}
+      <div className="event-content">
+        {activeTab === 'info' && <EventInfo />}
+        {activeTab === 'activities' && <EventActivities />}
+        {activeTab === 'gallery' && <EventGallery />}
+        {activeTab === 'map' && <EventMap />}
       </div>
     </div>
+  );
+};
+
+const EventDetails: React.FC = () => {
+  return (
+    <EventProvider>
+      <EventDetailsContent />
+    </EventProvider>
   );
 };
 

@@ -15,6 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
+### Event-Centered Architecture
+The app is built around **Events as the core entity**:
+- **Events** contain all related data: activities, photos, maps, attendees
+- **Context-based state management** for event data
+- **Modular component structure** with event-specific functionality
+- **Firebase integration** for real-time data synchronization
+
 ### Authentication System
 The app uses **Firebase Authentication** exclusively:
 - **Firebase Auth** (`src/auth/firebaseAuth.ts`) for all authentication operations
@@ -36,19 +43,30 @@ src/
 │   ├── firebase.ts         # Firebase configuration
 │   ├── firebaseAuth.ts     # Firebase Auth API wrapper
 │   └── types.ts           # Auth-related TypeScript types
+├── events/         # EVENT-CENTERED ARCHITECTURE
+│   ├── EventContext.tsx    # Event state management
+│   ├── EventList.tsx       # Public event listing
+│   ├── EventDetails.tsx    # Main event hub with tabs
+│   ├── components/         # Event-specific components
+│   │   ├── EventInfo.tsx   # Event information tab
+│   │   ├── EventActivities.tsx # Schedule and activities
+│   │   ├── EventGallery.tsx    # Event photos
+│   │   └── EventMap.tsx        # Venue map
+│   └── types/
+│       └── event.ts        # Event data structures
 ├── admin/          # Admin dashboard and user management
-├── events/         # Event listing and details
-├── gallery/        # Photo gallery with modal view
-├── maps/          # Interactive venue mapping
 ├── components/    # Shared UI components (Header, MobileNav, Profile)
 └── styles/        # Mobile-first CSS
 ```
 
-### Data Flow
-- **Production-ready**: All authentication flows use Firebase
-- **User profiles**: Stored in Firestore with role-based permissions
+### Data Flow - Event-Centered
+- **Events as Hub**: All data flows through event context
+- **Hierarchical Structure**: Events → Activities/Photos/Maps → User interactions
+- **Context Management**: EventProvider manages event-specific state
+- **Firebase Integration**: Real-time updates for event data
+- **Route-Based Navigation**: `/events/{eventId}/{section}` structure
+- **Authentication**: Firebase Auth with role-based permissions
 - **Session management**: Firebase Auth handles token refresh automatically
-- **Error handling**: Comprehensive error states for auth operations
 
 ### Mobile-First Design
 - Primary navigation via bottom mobile nav (`MobileNav.tsx`)
@@ -83,6 +101,56 @@ REACT_APP_FIREBASE_APP_ID
   - avatar_url?: string
   - created_at: timestamp
   - updated_at: timestamp
+
+/events/{eventId} ⭐ CORE COLLECTION
+  - id: string
+  - title: string
+  - description: string
+  - organizerId: string
+  - startDate/endDate: timestamps
+  - venue: object (name, address, coordinates)
+  - settings: object (isPublic, requiresRegistration, etc.)
+  - mapId?: string (reference to maps collection)
+  - stats: object (totalAttendees, totalActivities, totalPhotos)
+  - status: "draft" | "published" | "ongoing" | "completed"
+
+/activities/{activityId}
+  - id: string
+  - eventId: string (belongs to event)
+  - title: string
+  - description: string
+  - type: "session" | "workshop" | "break" | etc.
+  - startTime/endTime: strings
+  - location: object (spaceId, spaceName, capacity)
+  - speaker?: object (name, bio, company)
+  - requiresRegistration: boolean
+
+/photos/{photoId}
+  - id: string
+  - eventId: string (belongs to event)
+  - url: string
+  - uploadedBy: string (userId)
+  - activityId?: string (optional association)
+  - spaceId?: string (location context)
+  - status: "pending" | "approved" | "rejected"
+  - uploadedAt: timestamp
+
+/maps/{mapId}
+  - id: string
+  - organizerId: string (creator)
+  - name: string
+  - venue: string
+  - imageUrl: string
+  - spaces: array of MapSpace objects
+  - isTemplate: boolean (reusable by organizer)
+  - usedInEvents: array of eventIds
+
+/attendees/{attendeeId}
+  - id: string
+  - eventId: string
+  - userId: string
+  - status: "registered" | "confirmed" | "attended"
+  - registeredActivities: array of activityIds
 ```
 
 ## Implementation Status

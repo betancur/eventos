@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
+import { useNotifications } from '../components/NotificationProvider';
 
 const Login: React.FC = () => {
   const { login, loading, error } = useAuth();
+  const { showSuccess, showError } = useNotifications();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -29,13 +31,17 @@ const Login: React.FC = () => {
 
     // Basic validation
     if (!formData.email || !formData.password) {
-      setLoginError('Please fill in all fields');
+      const errorMsg = 'Please fill in all fields';
+      setLoginError(errorMsg);
+      showError(errorMsg);
       setIsSubmitting(false);
       return;
     }
 
     if (!formData.email.includes('@')) {
-      setLoginError('Please enter a valid email address');
+      const errorMsg = 'Please enter a valid email address';
+      setLoginError(errorMsg);
+      showError(errorMsg);
       setIsSubmitting(false);
       return;
     }
@@ -44,11 +50,18 @@ const Login: React.FC = () => {
       const result = await login(formData);
       
       if (!result.success) {
-        setLoginError(result.error || 'Login failed');
+        const errorMsg = result.error || 'Login failed';
+        setLoginError(errorMsg);
+        showError(errorMsg);
+      } else {
+        // Show success notification
+        showSuccess('¡Login exitoso! Bienvenido de vuelta.', 2000);
+        // If successful, the AuthProvider will handle the redirect
       }
-      // If successful, the AuthProvider will handle the redirect
     } catch (err: any) {
-      setLoginError(err.message || 'An unexpected error occurred');
+      const errorMsg = err.message || 'An unexpected error occurred';
+      setLoginError(errorMsg);
+      showError(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

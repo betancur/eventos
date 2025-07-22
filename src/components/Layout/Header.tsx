@@ -8,7 +8,10 @@ const Header: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    if (path === '/events') {
+      return location.pathname === '/events' || location.pathname === '/' || location.pathname.startsWith('/events/');
+    }
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   const handleLogout = async () => {
@@ -31,24 +34,6 @@ const Header: React.FC = () => {
               className={isActive('/events') || isActive('/') ? 'active' : ''}
             >
               Events
-            </Link>
-            <Link 
-              to="/gallery" 
-              className={isActive('/gallery') ? 'active' : ''}
-            >
-              Gallery
-            </Link>
-            <Link 
-              to="/map" 
-              className={isActive('/map') ? 'active' : ''}
-            >
-              Map
-            </Link>
-            <Link 
-              to="/activities" 
-              className={isActive('/activities') ? 'active' : ''}
-            >
-              Activities
             </Link>
           </nav>
           
