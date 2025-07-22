@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { USER_ROLES } from '../auth/types';
+import ChangePassword from '../auth/ChangePassword';
 
 const Profile: React.FC = () => {
   const { user, updateProfile, logout, loading } = useAuth();
@@ -11,6 +12,7 @@ const Profile: React.FC = () => {
   });
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -258,7 +260,11 @@ const Profile: React.FC = () => {
           <div className="card-body">
             <div className="row">
               <div className="col-12 col-md-6 mb-16">
-                <button className="btn btn-outline btn-block">
+                <button 
+                  className="btn btn-outline btn-block"
+                  onClick={() => setShowChangePassword(true)}
+                  disabled={loading}
+                >
                   Change Password
                 </button>
               </div>
@@ -275,6 +281,19 @@ const Profile: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <ChangePassword
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={() => {
+            setUpdateMessage({ 
+              type: 'success', 
+              text: 'Password changed successfully!' 
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

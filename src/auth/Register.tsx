@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { UserRole, USER_ROLES } from './types';
+import { UserRole } from './types';
 
 const Register: React.FC = () => {
   const { register, loading } = useAuth();
@@ -179,27 +179,28 @@ const Register: React.FC = () => {
                 )}
               </div>
 
-              {/* Role Selection */}
+              {/* Role Field - Hidden, always attendee */}
+              <input
+                type="hidden"
+                name="role"
+                value="attendee"
+              />
+
+              {/* Info about account type */}
               <div className="form-group">
-                <label htmlFor="role" className="form-label">
-                  Account Type
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  className="form-control"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting || loading}
-                >
-                  {Object.entries(USER_ROLES).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '4px' }}>
-                  Choose "Organizer" if you plan to create events
+                <div style={{
+                  backgroundColor: '#e3f2fd',
+                  border: '1px solid #bbdefb',
+                  borderRadius: '6px',
+                  padding: '12px',
+                  fontSize: '14px',
+                  color: '#1976d2'
+                }}>
+                  <strong>Account Type:</strong> Attendee
+                  <br />
+                  <span style={{ fontSize: '12px', color: '#1565c0' }}>
+                    All new accounts start as Attendee. Contact an administrator to upgrade your account for organizing events.
+                  </span>
                 </div>
               </div>
 

@@ -176,20 +176,6 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* Demo Account Info */}
-        <div className="card mt-16" style={{ backgroundColor: '#f8f9fa' }}>
-          <div className="card-body">
-            <h3 style={{ fontSize: '16px', marginBottom: '8px' }}>Demo Accounts</h3>
-            <p style={{ fontSize: '12px', color: '#6c757d', marginBottom: '8px' }}>
-              For testing purposes, you can use these demo accounts:
-            </p>
-            <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-              <p><strong>Admin:</strong> admin@eventos.com / password123</p>
-              <p><strong>Organizer:</strong> organizer@eventos.com / password123</p>
-              <p><strong>Attendee:</strong> attendee@eventos.com / password123</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

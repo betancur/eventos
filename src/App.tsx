@@ -15,6 +15,12 @@ import MapView from './maps/MapView';
 // Auth Pages
 import Login from './auth/Login';
 import Register from './auth/Register';
+import ForgotPassword from './auth/ForgotPassword';
+import ProtectedRoute from './auth/ProtectedRoute';
+
+// Protected Pages
+import Profile from './components/Profile';
+import AdminDashboard from './admin/AdminDashboard';
 
 // Styles
 import './styles/global.css';
@@ -38,6 +44,35 @@ function App() {
                 {/* Auth Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                
+                {/* Protected Routes */}
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Admin Routes */}
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
               </Routes>
             </div>
           </main>
